@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro de Peajes</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --surface: #ffffff;
+    --surface2: #ede8df;
+    --accent: #e85d04;
+    --accent2: #370617;
+    --success: #2d6a4f;
+    --text: #1a1a1a;
+    --muted: #888070;
+    --border: #ddd8ce;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(circle at 20% 20%, rgba(232,93,4,0.06) 0%, transparent 50%),
+                      radial-gradient(circle at 80% 80%, rgba(55,6,23,0.04) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .container {
+    position: relative;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 28px 16px 60px;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3rem;
+    letter-spacing: 3px;
+    color: var(--accent2);
+    line-height: 1;
+  }
+
+  .logo span { color: var(--accent); }
+
+  .tagline {
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .no-support {
+    background: #fff0f0;
+    border: 1px solid #ffaaaa;
+    border-radius: 10px;
+    padding: 14px 18px;
+    color: #cc0000;
+    font-size: 0.8rem;
+    margin-bottom: 20px;
+    display: none;
+  }
+
+  /* Mic Card */
+  .mic-card {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 28px 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.06);
+    border: 1px solid var(--border);
+  }
+
+  .steps {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .step {
+    font-size: 0.6rem;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    color: var(--muted);
+    background: var(--bg);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .step.done {
+    background: var(--success);
+    border-color: var(--success);
+    color: #fff;
+  }
+
+  .step.current {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .field-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .field-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+    color: var(--accent2);
+    min-width: 140px;
+  }
+
+  .field-hint {
+    font-size: 0.72rem;
+    color: var(--muted);
+    background: var(--surface2);
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+
+  .transcript-box {
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 0.9rem;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    min-height: 52px;
+    width: 100%;
+    margin-bottom: 16px;
+    transition: all 0.2s;
+    word-break: break-word;
+    resize: none;
+    outline: none;
+  }
+
+  .transcript-box.active {
+    border-color: var(--accent);
+    color: var(--text);
+    background: #fff8f5;
+  }
+
+  .mic-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .mic-btn {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: none;
+    background: var(--accent2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(55,6,23,0.2);
+    flex-shrink: 0;
+  }
+
+  .mic-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(55,6,23,0.3);
+  }
+
+  .mic-btn.listening {
+    background: var(--accent);
+    animation: pulse 1.2s infinite;
+    box-shadow: 0 0 0 0 rgba(232,93,4,0.4);
+  }
+
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(232,93,4,0.4); }
+    70% { box-shadow: 0 0 0 18px rgba(232,93,4,0); }
+    100% { box-shadow: 0 0 0 0 rgba(232,93,4,0); }
+  }
+
+  .btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+  }
+
+  .btn-confirm {
+    background: var(--success);
+    color: #fff;
+  }
+
+  .btn-confirm:hover { background: #1b4332; transform: translateY(-1px); }
+  .btn-confirm:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+  .btn-retry {
+    background: var(--surface2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  .btn-retry:hover { color: var(--text); }
+
+  .btn-cancel {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    font-size: 0.72rem;
+  }
+
+  /* Preview */
+  .preview-card {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 18px 20px;
+    margin-bottom: 24px;
+    border: 1px solid var(--border);
+    display: none;
+  }
+
+  .preview-card.visible { display: block; }
+
+  .preview-title {
+    font-size: 0.62rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+
+  .preview-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .pf {
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 8px 14px;
+  }
+
+  .pf-label {
+    font-size: 0.58rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 2px;
+    font-weight: 600;
+  }
+
+  .pf-value { font-size: 0.82rem; color: var(--accent); font-weight: 500; }
+  .pf-value.empty { color: var(--muted); font-style: italic; }
+
+  /* Table section */
+  .table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .table-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 2px;
+    color: var(--accent2);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .count-badge {
+    background: var(--accent);
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 20px;
+  }
+
+  .export-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .btn-csv {
+    background: var(--accent2);
+    color: #fff;
+    font-size: 0.72rem;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+
+  .btn-csv:hover { background: #550920; transform: translateY(-1px); }
+
+  .btn-clear {
+    background: transparent;
+    color: #cc3333;
+    border: 1px solid #cc3333;
+    font-size: 0.72rem;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+
+  .btn-clear:hover { background: #fff0f0; }
+
+  .table-wrap {
+    background: var(--surface);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    overflow-x: auto;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+  }
+
+  thead { background: var(--accent2); }
+
+  th {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.7);
+    padding: 14px 16px;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+
+  td.num { color: var(--accent); font-weight: 600; }
+
+  .btn-del {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 6px;
+    padding: 3px 8px;
+    cursor: pointer;
+    font-size: 0.7rem;
+    transition: all 0.2s;
+  }
+
+  .btn-del:hover { color: #cc0000; border-color: #cc0000; }
+
+  .empty-state {
+    text-align: center;
+    padding: 44px 20px;
+    color: var(--muted);
+    font-size: 0.82rem;
+  }
+
+  .empty-icon { font-size: 2.8rem; margin-bottom: 10px; opacity: 0.35; }
+
+  .totals-row td {
+    background: var(--surface2) !important;
+    font-weight: 700;
+    color: var(--accent) !important;
+  }
+
+  .totals-row td:first-child {
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 2px;
+    font-size: 0.8rem;
+    color: var(--muted) !important;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div>
+      <div class="logo">PEAJE<span>LOG</span></div>
+      <div class="tagline">Registro de peajes por voz</div>
+    </div>
+  </header>
+
+  <div id="noSupport" class="no-support">
+    ⚠️ Tu navegador no soporta reconocimiento de voz. Usa Chrome en Android.
+  </div>
+
+  <!-- Mic Card -->
+  <div class="mic-card">
+    <div class="steps" id="steps"></div>
+
+    <div class="field-row">
+      <div class="field-label" id="fieldLabel">Listo</div>
+      <div class="field-hint" id="fieldHint">Presiona el micrófono para comenzar</div>
+    </div>
+
+    <textarea class="transcript-box" id="transcriptBox" rows="2" placeholder="Aquí aparecerá lo que digas... (también puedes escribir o corregir)"></textarea>
+
+    <div class="mic-row">
+      <button class="mic-btn" id="micBtn" onclick="toggleMic()">
+        <span id="micIcon">🎤</span>
+      </button>
+      <button class="btn btn-confirm" id="confirmBtn" onclick="confirmField()" disabled>✓ Confirmar</button>
+      <button class="btn btn-retry" onclick="retryField()">↺ Repetir</button>
+      <button class="btn btn-cancel" onclick="cancelRecord()">✕ Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Preview -->
+  <div class="preview-card" id="previewCard">
+    <div class="preview-title">Registro en progreso</div>
+    <div class="preview-fields" id="previewFields"></div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-header">
+    <div class="table-title">
+      Registros <span class="count-badge" id="countBadge">0</span>
+    </div>
+    <div class="export-btns">
+      <button class="btn-clear" onclick="clearAll()">🗑 Limpiar</button>
+      <button class="btn-csv" onclick="exportCSV()">⬇ Exportar Excel</button>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Fecha</th>
+          <th>Peaje</th>
+          <th>Valor</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+const FIELDS = [
+  { key: 'fecha',  label: 'FECHA',  hint: 'Di el día, mes y año. Ej: "2 12 2026"' },
+  { key: 'peaje', label: 'PEAJE',  hint: 'Nombre del peaje' },
+  { key: 'valor', label: 'VALOR',  hint: 'Monto en pesos. Ej: "25000" o "veinticinco mil"' },
+];
+
+let records = JSON.parse(localStorage.getItem('peajeLog') || '[]');
+let currentStep = -1;
+let currentRecord = {};
+let lastTranscript = '';
+let isListening = false;
+let recognition = null;
+
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (!SR) {
+  document.getElementById('noSupport').style.display = 'block';
+} else {
+  recognition = new SR();
+  recognition.lang = 'es-CO';
+  recognition.continuous = false;
+  recognition.interimResults = true;
+
+  recognition.onresult = (e) => {
+    let final = '', interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) final += t;
+      else interim += t;
+    }
+    const display = final || interim;
+    if (final) lastTranscript = final;
+    const box = document.getElementById('transcriptBox');
+    box.value = display || '';
+    box.classList.toggle('active', !!display);
+    document.getElementById('confirmBtn').disabled = !display;
+  };
+
+  recognition.onend = () => { isListening = false; updateMicUI(); };
+  recognition.onerror = (e) => {
+    isListening = false; updateMicUI();
+    if (e.error !== 'no-speech' && e.error !== 'aborted')
+      document.getElementById('transcriptBox').value = 'Error: ' + e.error;
+  };
+}
+
+function updateMicUI() {
+  const btn = document.getElementById('micBtn');
+  const icon = document.getElementById('micIcon');
+  btn.classList.toggle('listening', isListening);
+  icon.textContent = isListening ? '⏹' : '🎤';
+}
+
+function toggleMic() {
+  if (!recognition) return;
+  if (isListening) { recognition.stop(); return; }
+
+  if (currentStep === -1) {
+    currentStep = 0;
+    currentRecord = {};
+    document.getElementById('previewCard').classList.add('visible');
+  }
+
+  lastTranscript = '';
+  const box = document.getElementById('transcriptBox');
+  box.value = '';
+  box.placeholder = 'Escuchando...';
+  box.classList.add('active');
+  document.getElementById('confirmBtn').disabled = true;
+  updateFieldUI();
+
+  try { recognition.start(); isListening = true; updateMicUI(); } catch(e) {}
+}
+
+// Allow manual edits in transcript box to also update lastTranscript
+document.addEventListener('DOMContentLoaded', () => {
+  const box = document.getElementById('transcriptBox');
+  box.addEventListener('input', () => {
+    lastTranscript = box.value;
+    document.getElementById('confirmBtn').disabled = !box.value.trim();
+    if (box.value) box.classList.add('active');
+  });
+});
+
+function updateFieldUI() {
+  const f = FIELDS[currentStep];
+  if (!f) return;
+
+  document.getElementById('fieldLabel').textContent = f.label;
+  document.getElementById('fieldHint').textContent = f.hint;
+
+  document.getElementById('steps').innerHTML = FIELDS.map((fi, i) => {
+    let cls = 'step';
+    if (i < currentStep) cls += ' done';
+    else if (i === currentStep) cls += ' current';
+    return `<span class="${cls}">${fi.label}</span>`;
+  }).join('');
+
+  document.getElementById('previewFields').innerHTML = FIELDS.map(fi => {
+    const v = currentRecord[fi.key];
+    return `<div class="pf">
+      <div class="pf-label">${fi.label}</div>
+      <div class="pf-value ${v ? '' : 'empty'}">${v || '—'}</div>
+    </div>`;
+  }).join('');
+}
+
+function confirmField() {
+  const box = document.getElementById('transcriptBox');
+  const raw = (box.value || lastTranscript || '').trim();
+  if (!raw) return;
+  const f = FIELDS[currentStep];
+  let val = raw;
+
+  if (f.key === 'fecha') val = parseDate(val);
+  if (f.key === 'valor') val = parseNum(val);
+
+  currentRecord[f.key] = val;
+  lastTranscript = '';
+  document.getElementById('confirmBtn').disabled = true;
+  box.value = `✓ "${val}" guardado`;
+  box.classList.add('active');
+
+  currentStep++;
+  if (currentStep >= FIELDS.length) {
+    finishRecord();
+  } else {
+    updateFieldUI();
+    setTimeout(() => {
+      box.value = '';
+      box.placeholder = 'Presiona 🎤 para el siguiente campo';
+      box.classList.remove('active');
+    }, 700);
+  }
+}
+
+// Convert spoken date to DD/MM/YYYY
+function parseDate(str) {
+  const months = {
+    enero:1, febrero:2, marzo:3, abril:4, mayo:5, junio:6,
+    julio:7, agosto:8, septiembre:9, octubre:10, noviembre:11, diciembre:12
+  };
+  // Try spoken format: "2 de abril de 2026" or "2 abril 2026"
+  const spoken = str.match(/(\d{1,2})\s+(?:de\s+)?(\w+)\s+(?:de\s+)?(\d{4})/i);
+  if (spoken) {
+    const d = spoken[1].padStart(2,'0');
+    const m = String(months[spoken[2].toLowerCase()] || spoken[2]).padStart(2,'0');
+    const y = spoken[3];
+    if (months[spoken[2].toLowerCase()]) return `${d}/${m}/${y}`;
+  }
+  // Try numeric: "2 12 2026" or "2/12/2026"
+  const nums = str.replace(/[\/\-\.]/g,' ').match(/(\d{1,2})\s+(\d{1,2})\s+(\d{4})/);
+  if (nums) return `${nums[1].padStart(2,'0')}/${nums[2].padStart(2,'0')}/${nums[3]}`;
+  // Return as-is if can't parse
+  return str;
+}
+
+function parseNum(str) {
+  const cleaned = str
+    .replace(/mil/gi, '000')
+    .replace(/millones?/gi, '000000')
+    .replace(/pesos?/gi, '')
+    .replace(/[^0-9]/g, '');
+  return cleaned ? parseInt(cleaned).toLocaleString('es-CO') : str;
+}
+
+function retryField() {
+  lastTranscript = '';
+  const box = document.getElementById('transcriptBox');
+  box.value = '';
+  box.placeholder = 'Presiona 🎤 para intentar de nuevo';
+  box.classList.remove('active');
+  document.getElementById('confirmBtn').disabled = true;
+}
+
+function cancelRecord() {
+  if (recognition && isListening) recognition.stop();
+  currentStep = -1; currentRecord = {}; lastTranscript = '';
+  document.getElementById('previewCard').classList.remove('visible');
+  document.getElementById('fieldLabel').textContent = 'Listo';
+  document.getElementById('fieldHint').textContent = 'Presiona el micrófono para comenzar';
+  const box = document.getElementById('transcriptBox');
+  box.value = '';
+  box.placeholder = 'Aquí aparecerá lo que digas... (también puedes escribir)';
+  box.classList.remove('active');
+  document.getElementById('confirmBtn').disabled = true;
+  document.getElementById('steps').innerHTML = '';
+}
+
+function finishRecord() {
+  records.push({ ...currentRecord });
+  saveRender();
+  const box = document.getElementById('transcriptBox');
+  box.value = '✅ Peaje registrado correctamente';
+  document.getElementById('fieldLabel').textContent = '¡LISTO!';
+  document.getElementById('fieldHint').textContent = 'Registro guardado';
+  setTimeout(cancelRecord, 2000);
+}
+
+function parseMoney(s) { return parseInt(String(s||0).replace(/[^0-9]/g,'')) || 0; }
+
+function saveRender() {
+  localStorage.setItem('peajeLog', JSON.stringify(records));
+  renderTable();
+}
+
+// Edit modal
+function editRecord(i) {
+  const r = records[i];
+  const newFecha = prompt('Fecha (DD/MM/AAAA):', r.fecha || '');
+  if (newFecha === null) return;
+  const newPeaje = prompt('Peaje:', r.peaje || '');
+  if (newPeaje === null) return;
+  const newValor = prompt('Valor (solo números):', parseMoney(r.valor) || '');
+  if (newValor === null) return;
+
+  records[i].fecha = newFecha.trim() || r.fecha;
+  records[i].peaje = newPeaje.trim() || r.peaje;
+  records[i].valor = newValor.trim() ? parseInt(newValor.replace(/[^0-9]/g,'')).toLocaleString('es-CO') : r.valor;
+  saveRender();
+}
+
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  document.getElementById('countBadge').textContent = records.length;
+
+  if (!records.length) {
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">🛣️</div>No hay peajes registrados.<br>Presiona el micrófono para comenzar.</div></td></tr>`;
+    return;
+  }
+
+  let total = 0;
+  tbody.innerHTML = records.map((r, i) => {
+    const v = parseMoney(r.valor);
+    total += v;
+    return `<tr>
+      <td>${i+1}</td>
+      <td>${r.fecha||'—'}</td>
+      <td>${r.peaje||'—'}</td>
+      <td class="num">$${r.valor||'0'}</td>
+      <td style="display:flex;gap:4px">
+        <button class="btn-del" onclick="editRecord(${i})" style="color:var(--accent2);border-color:var(--accent2)">✏️</button>
+        <button class="btn-del" onclick="delRecord(${i})">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  tbody.innerHTML += `<tr class="totals-row">
+    <td colspan="3">TOTAL</td>
+    <td>$${total.toLocaleString('es-CO')}</td>
+    <td></td>
+  </tr>`;
+}
+
+function delRecord(i) {
+  if (confirm('¿Eliminar este registro?')) { records.splice(i,1); saveRender(); }
+}
+
+function clearAll() {
+  if (!records.length) return;
+  if (confirm('¿Eliminar todos los registros?')) { records = []; saveRender(); }
+}
+
+function exportCSV() {
+  if (!records.length) return alert('No hay registros para exportar.');
+  const headers = ['#','Fecha','Peaje','Valor'];
+  const rows = records.map((r,i) => [i+1, r.fecha, r.peaje, r.valor].join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'peajes_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+
+renderTable();
+</script>
+</body>
+</html>
